@@ -1,4 +1,4 @@
-use std::{env};
+use std::{env, io};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::process;
@@ -45,12 +45,24 @@ fn run(config: Config) -> Result<(), Box<dyn Error>>{
     let file = File::open(&config.filename)?;
     let reader = BufReader::new(file);
     
-    for line_result in reader.lines() {
-        let line = line_result?;
-        if line.contains(&config.pattern) {
-            println!("{line}");
-        }
+    let res = search(&config.pattern, reader)?;
+
+    for line in res {
+        println!("{line}");
     }
 
     Ok(())
+}
+
+fn search(pattern: &str, bfr: impl BufRead) -> io::Result<Vec<String>> {
+    let mut matches: Vec<String> = Vec::new();
+
+    for line_result in bfr.lines() {
+        let line = line_result?;
+        if line.contains(pattern) {
+            matches.push(line);
+        }
+    }
+
+    Ok(matches)
 }
