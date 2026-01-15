@@ -66,3 +66,24 @@ fn search(pattern: &str, bfr: impl BufRead) -> io::Result<Vec<String>> {
 
     Ok(matches)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn finds_matching_lines() {
+        let input = "\
+hello world
+this is rust
+hello systems programming";
+        
+        let reader = Cursor::new(input);
+        let res = search("hello", reader).unwrap();
+
+        assert_eq!(res.len(), 2);
+        assert_eq!(res[0], "hello world");
+        assert_eq!(res[1], "hello systems programming");
+    }
+}
