@@ -8,11 +8,14 @@ use std::error::Error;
 struct Config {
     pattern: String,
     filename: String,
+    ignore_case: bool
 }
 
 impl Config {
     fn new(mut args: Args) -> Result<Config, &'static str> {
         args.next(); // This is to skip the command name
+
+        let ignore_case = std::env::var("IGNORE_CASE").is_ok();
 
         let pattern = match args.next() {
             Some(arg) => arg,
@@ -24,7 +27,7 @@ impl Config {
             None => return Err("Missing File name"),
         };
 
-        Ok(Config { pattern, filename })
+        Ok(Config { pattern, filename, ignore_case})
     }
 }
 
@@ -45,7 +48,12 @@ fn run(config: Config) -> Result<(), Box<dyn Error>>{
     let file = File::open(&config.filename)?;
     let reader = BufReader::new(file);
     
-    let res = search(&config.pattern, reader)?;
+    let res= 
+    if config.ignore_case {
+        search_case_insensitive(&config.pattern, reader)?
+    } else {
+        search(&config.pattern, reader)?
+    };
 
     for line in res {
         println!("{line}");
@@ -59,11 +67,24 @@ fn search(pattern: &str, bfr: impl BufRead) -> io::Result<Vec<String>> {
 
     for line_result in bfr.lines() {
         let line = line_result?;
-        if line.contains(pattern) {
+        if line.contains(&pattern) {
             matches.push(line);
         }
     }
 
+    Ok(matches)
+}
+
+fn search_case_insensitive(pattern: &str, bfr: impl BufRead) -> io::Result<Vec<String>> {
+    let pattern= pattern.to_lowercase();
+    let mut matches: Vec<String> = Vec::new();
+
+    for line_res in bfr.lines() {
+        let line = line_res?;
+        if line.to_lowercase().contains(&pattern) {
+            matches.push(line);
+        }
+    }
     Ok(matches)
 }
 
@@ -86,4 +107,18 @@ hello systems programming";
         assert_eq!(res[0], "hello world");
         assert_eq!(res[1], "hello systems programming");
     }
+
+    #[test]
+    fn finds_case_insensitive_matches() {
+        let input = "\
+Hello World
+this is Rust
+HELLO systems";
+
+        let reader = Cursor::new(input);
+        let result = search_case_insensitive("hello", reader).unwrap();
+
+        assert_eq!(result.len(), 2);
+}
+
 }
