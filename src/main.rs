@@ -1,19 +1,15 @@
-use std::{io};
-use std::fs::File;
-use std::io::{BufRead, BufReader};
 use clap::Parser;
+use std::fs::File;
+use std::io::BufReader;
 use thiserror::Error;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about)]
-struct Config {
-    pattern: String,
 
-    filename: String,
+mod config;
+use config::Config;
 
-    #[arg(short, long)]
-    ignore_case: bool,
-}
+mod search;
+use search::*;
+
 
 #[derive(Error, Debug)]
 enum AppError {
@@ -47,32 +43,6 @@ fn run(config: Config) -> Result<(), AppError> {
     }
 
     Ok(())
-}
-
-fn search(pattern: &str, bfr: impl BufRead) -> io::Result<Vec<String>> {
-    let mut matches: Vec<String> = Vec::new();
-
-    for line_result in bfr.lines() {
-        let line = line_result?;
-        if line.contains(&pattern) {
-            matches.push(line);
-        }
-    }
-
-    Ok(matches)
-}
-
-fn search_case_insensitive(pattern: &str, bfr: impl BufRead) -> io::Result<Vec<String>> {
-    let pattern= pattern.to_lowercase();
-    let mut matches: Vec<String> = Vec::new();
-
-    for line_res in bfr.lines() {
-        let line = line_res?;
-        if line.to_lowercase().contains(&pattern) {
-            matches.push(line);
-        }
-    }
-    Ok(matches)
 }
 
 #[cfg(test)]
