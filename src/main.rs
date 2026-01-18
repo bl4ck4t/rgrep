@@ -1,8 +1,8 @@
 use std::{io};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::error::Error;
 use clap::Parser;
+use thiserror::Error;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -15,6 +15,12 @@ struct Config {
     ignore_case: bool,
 }
 
+#[derive(Error, Debug)]
+enum AppError {
+    #[error("Failed to read file")]
+    Io(#[from] std::io::Error),
+}
+
 fn main() {
     let config = Config::parse();
 
@@ -24,7 +30,7 @@ fn main() {
     }
 }
 
-fn run(config: Config) -> Result<(), Box<dyn Error>>{
+fn run(config: Config) -> Result<(), AppError> {
 
     let file = File::open(&config.filename)?;
     let reader = BufReader::new(file);
