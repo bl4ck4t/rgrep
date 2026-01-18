@@ -1,5 +1,4 @@
-use std::io;
-use std::io::BufRead;
+use std::io::{self, BufRead};
 
 pub fn search(pattern: &str, bfr: impl BufRead) -> io::Result<Vec<String>> {
     let mut matches: Vec<String> = Vec::new();
