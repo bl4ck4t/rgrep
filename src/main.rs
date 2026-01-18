@@ -1,45 +1,26 @@
-use std::{env, io};
+use std::{io};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::process;
-use std::env::Args;
 use std::error::Error;
+use clap::Parser;
 
+#[derive(Parser, Debug)]
+#[command(author, version, about)]
 struct Config {
     pattern: String,
+
     filename: String,
-    ignore_case: bool
-}
 
-impl Config {
-    fn new(mut args: Args) -> Result<Config, &'static str> {
-        args.next(); // This is to skip the command name
-
-        let ignore_case = std::env::var("IGNORE_CASE").is_ok();
-
-        let pattern = match args.next() {
-            Some(arg) => arg,
-            None => return  Err("Missing search pattern"),
-        };
-
-        let filename = match args.next() {
-            Some(arg) => arg,
-            None => return Err("Missing File name"),
-        };
-
-        Ok(Config { pattern, filename, ignore_case})
-    }
+    #[arg(short, long)]
+    ignore_case: bool,
 }
 
 fn main() {
-    let config = Config::new(env::args()).unwrap_or_else(|err| {
-        eprintln!("Problem parsing arguments: {err}");
-        process::exit(1);
-    });
+    let config = Config::parse();
 
     if let Err(err) = run(config) {
         eprintln!("Application error: {err}");
-        process::exit(1);
+        std::process::exit(1);
     }
 }
 
