@@ -1,3 +1,5 @@
+// Binary entry point.
+// Responsible only for CLI parsing and high-level error handling.
 use clap::Parser;
 use std::fs::File;
 use std::io::BufReader;
@@ -14,14 +16,18 @@ enum AppError {
 }
 
 fn main() {
+    // Parse command-line arguments into a configuration struct.
     let config = Config::parse();
 
+    // Delegate execution to `run` and handle any top-level errors.
     if let Err(err) = run(config) {
         eprintln!("Application error: {err}");
         std::process::exit(1);
     }
 }
 
+// Orchestrates file I/O and search execution.
+// Keeps side effects (I/O) separate from pure search logic.
 fn run(config: Config) -> Result<(), AppError> {
 
     let file = File::open(&config.filename)?;

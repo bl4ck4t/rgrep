@@ -1,3 +1,6 @@
+// Integration tests for the public search API.
+// Tests operate on the library crate rather than the binary.
+
 use std::io::Cursor;
 use rgrep::search::*;
 
